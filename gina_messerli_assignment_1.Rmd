@@ -1,0 +1,161 @@
+---
+title: 'Exercise 1: Assignment'
+author: "Gina Messerli"
+date: "15.06.2020"
+output:
+  html_document:
+    fig_height: 6
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+```{r knitr_init, include=TRUE, cache=FALSE, warning=FALSE}
+library(knitr)
+
+### Global options
+options(max.print="150")
+opts_chunk$set(include=TRUE,
+	             cache=FALSE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+rm(list = ls())
+```
+
+# Assignment 1: RMarkdown
+
+* Change the author of this file to your name.
+
+*Siehe oben*
+
+* Change the settings of this file so that the code is by default shown.
+
+*Siehe oben; war mir nicht sicher, ob das auch bedeutet, den Code zu de-collapsen, aber das hätte ich auf jeden Fall auch gemacht*
+
+
+# Assignment 2: Import dataset
+
+In the data folder under this assignment (data/ex1) you will find two datasets (twitter.Rda, guardian.Rda). These two datasets contain information retrieved from the respective APIs of the two platforms:
+
+ * **guardian.Rda**: articles of The Guardian obtained via its API. Contains information about an article, its author and its content.
+ * **twitter.Rda**: Tweets published by the account 'guardian' on Twitter. These Tweets often represent links to articles of The Guardian and contain information about the reactions to those articles (such as how many people favorited these statuses).
+ 
+**Assignment:** Find a suitable variable to merge these two datasets on and then create a combined dataset that contains information about both the article characteristics (from the Guardian API) and the Twitter characteristics. Then use the **merge()** command to merge the two datasets. Report how many observations you lose from each original dataset.
+
+*Antwort: 
+
+```{r}
+setwd("~/GitHub/fds-2020-exercise")
+#Working Directory einstellen
+
+load("data/ex1/guardian.Rda")
+#Datenset des Guardian laden
+
+load("data/ex1/twitter.Rda")
+#Datenset von Twitter laden
+
+View(guardian)
+#Datenset Guardian anschauen
+#Number of observations: 3493
+
+View(twitter)
+#Datenset Twitter anschauen
+#Number of observations: 4077
+
+intersect(names(guardian), names(twitter))
+#Herausfinden, welche Variablen in beiden Datensets identisch sind; Resultat: Variable "Link".
+
+combo <- merge(guardian, twitter, by="link")
+#Mergen der Datasets über Variable Link; Link als identifiervariable; Artikelinfos zum entsprechenden Link werden mit Reaktionen zu diesem Link gemergt.
+#Number of observations: 2498
+
+library(dplyr)
+#Aktiviere dplyr library
+
+twitout <- anti_join(twitter, combo, by="link")
+#Datenset erstellen, das die Beobachtungen des Twitter-Datensets enthält, die nicht gematcht werden können im gemergten Datenset. Enthält 1579 Beobachtungen, d.h. so viele Beobachtungen gehen beim Mergen im Twitter-Datenset verloren.
+
+guardout <- anti_join(guardian, combo, by = "link")
+#Datenset erstellen, das die Beobachtungen des Guardian-Datensets enthält, die nicht gematcht werden können im gemergten Datenset.Enthält 1142 Beobachtungen, d.h. so viele Beobachtungen gehen beim Mergen im Guardian-Datenset verloren.
+
+```
+
+*Ich habe die Datensets mithilfe der Variable "Link" gemergt, da dies die einzige Variable ist, die in beiden Datensets vorkommt. Um zu berechnen, wieviele Beobachtungen für jedes Datenset beim Mergen verloren gehen (so habe ich die Aufgabe verstanden), muss ich berechnen, wie viele Beobachtungen im einen Datenset jeweils keinen Match auf der Link-Variable im gemergten Datenset haben. Dazu benutze ich die anti_join Funktion der dplyr-library. Schauen wir dann in die hieraus entstandenen Datensets, twitout und guardout, so sehen wir, dass beim Twitter-Datensetz 1579 Beobachtungen verloren gehen und im Guardian-Datenset 1142 Beobachtungen.*
+
+
+# Assignment 3: Insights
+
+ * Does the page number where the article occurred in the newspaper have a positive or negative correlation with the number of Retweets an article received?
+ 
+```{r}
+names(combo)
+#Variablen des gemergten Datensets mal anschauen...
+#Variable für Page Numer: newspaperPageNumber?
+#Variable für number of Retweets: Entweder retweet_count oder retweet_retweet_count?
+
+library(labelled)
+
+var_label(combo$newspaperPageNumber)
+#Da das Teil kein Label hat, keine Variablenbeschreibung exisitiert, aber das Teil den gesuchten Namen hat und keine andere Variable so gut passt, gehe ich davon aus, dass dies die Variable ist, die tatsächlich spezifiziert, auf welcher Seite der Artikel aufgetaucht ist und somit die erste gesuchte Variable ist.
+
+test <- dplyr::select(combo, retweet_count, retweet_retweet_count)
+#Erstellen eines Datensets "test", um etwas schneller die beiden Kandidatenvariablen retweet_count und retweet_retweet_count vergleichen zu können.
+
+View(test)
+#Datenset "test" ansehen. Konklusion: Auf Grund weiterer fehlender Informationen gehe ich davon aus, dass die Anzahl Retweets, die ein Artikel erhalten hat, durch retweet_count spezifiziert wird, da die andere Variable nur NAs zu haben scheint und damit die Berechnung einer Korrelation gar nicht möglich wäre (es sei denn, das Ganze ist eine fun Frage? :))
+
+is.numeric(combo$retweet_count)
+
+is.numeric(combo$newspaperPageNumber)
+#Kurz testen, ob die Teilers überhaupt numerisch sind und damit (mangelnds weiterer Informationen) prima facie das richtige Skalenniveau haben, um eine Korrelation auszurechnen. Scheint der Fall zu sein.
+
+correl <- cor(combo$newspaperPageNumber, combo$retweet_count, use="complete.obs")
+#Korrelation berechnen.
+
+round(correl, digits = 5)
+#Errechnete Korrelation noch etwas runden
+```
+
+Die Seitenzahl, wo der Artikel erschienen ist, scheint eine leicht negative Korrelation von gerundet -0.06686 mit der Anzahl an Retweets, die ein Artikel erhalten hat, zu haben.
+
+* Do articles about music get more or less frequently liked ("favorited") than sport articles?
+```{r}
+names(combo)
+#Gemergtes Datenset auf Favorited-Variable durchsuchen. Wahrscheinlich ist's die Variable "favorite_count"
+#Gemergtes Datenset auf passende Content-Variable durchsuchen (music vs. sport). Hab mal ein paar Variablen rausgepickt und geschaut, welche es am ehesten sein könnte und dazu ein neues Datenset mit möglichen Hits erstellt:
+
+flopster <- dplyr::select(combo, sectionName, webTitle, hashtags, media_type, body, name, sectionId, id)
+View(flopster)
+#Gesuchte Variable scheint sectionName bzw. sectionId zu sein
+
+levels(combo$sectionId)
+#Values der Variable anschauen; Variable hat value "sport" und value "music", um Artikel über Sport resp. Musik zu identifizieren. Sie hat aber auch den value "football". Da in der Aufgabenstellung unklar ist, ob das Thema Sport gemeint ist, zu dem ja auch Artikel über Fussball gehören würden, oder nur alle Artikel, die auf sectionId die Ausprägung "sport" haben, werde ich einfach beides anschauen
+
+dumbo <- dplyr::select(combo, sectionId, favorite_count)
+#Erstellen eines Datensets "dumbo", das nur die zu verwendenden Variablen enthält.
+shakethebooty <- filter(dumbo, sectionId=="football"|sectionId=="sport"|sectionId=="music")
+View(shakethebooty)
+#Erstellen eines Datensets "shakethebooty", in dem nur die Artikel vorkommen, die entweder Sport, Musik oder Fussball betreffen.
+
+aggregate(shakethebooty$favorite_count, by=list(Artikelkategorie=shakethebooty$sectionId), FUN=sum)
+#Summe aller favourites berechnen pro Gruppe (Fussball, Sport und Musik).
+
+5170 + 4025
+#Berechnen, wieviel Artikel geliked wurden, die entweder als "sport" oder "Fussball" kategorisiert wurden.
+
+```
+
+Fussball wurde 5170 Mal gefavorited, Sport 4025 mal und Musik 7374 Mal. Wenn wir nur Sportartikel, wie sie in der Ausprägung "sport" kodiert sind, und Musikartikel vergleichen, wurden Artikel über Musik mehr gefavorited. Wenn wir Artikel über Sport als Konzept insgesamt, also Artikel, die mit den Ausprägungen "sport" oder "football" (was ja auch ein Sport ist) kodiert sind, mit Musikartikeln vergleichen, so wurde unter dieser Interpretation der Sport mehr gefavorited.
