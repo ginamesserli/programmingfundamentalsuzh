@@ -1,0 +1,144 @@
+---
+title: 'Exercise 2: Assignment'
+author: "Philipp Kling"
+date: "16.06.2020"
+output:
+  html_document:
+    code_folding: show
+    fig_height: 6
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+```{r knitr_init, include=TRUE}
+library(knitr)
+
+### Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=FALSE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+rm(list = ls())
+```
+
+# Preparation
+
+# Assignment 1: Recoginition, loading, extraction
+
+
+### Recognition
+
+In the Github repository under data/ex2, you will find two files: file_a and file_b. Use a text editor of your choice, inspect each file, and determine what type of data each file includes. 
+
+*File A*: Könnte von der Struktur her entweder HTML oder XML sein. Da das file einen Verweis auf die xml-Version enthält, handelt es sich um ein *XML-file*.
+
+*File B*: Das zweite File benutzt gewellte Klammern. Es handelt sich hier meines Erachtens deshalb um ein *JSON-file*.
+
+### File A
+Use an appropriate package to load the **file_a** into R. Try the functions associated with the package you used to load the data to get a feeling for the dataset and extract the following information with it.
+
+ * Extract a list of the IDs of the books.
+
+```{r,include=TRUE}
+
+library(xml2)
+#Laden der xml2 library, um File A in R laden zu können.
+
+file_a <- read_xml("/Users/ginam/OneDrive/Dokumente/GitHub/fds-2020-exercise/data/ex2/file_a")
+#Working Directory setzen
+
+xml_contents(file_a)
+#Inhalte der Nodes des Files A anzeigen.
+
+danceoff <- xml_text(file_a)
+#File in Text umwandeln.
+
+library(stringr)
+#Stringr library aktivieren
+
+helphelp <- unlist(stringr::str_extract_all(string=file_a,
+                                pattern = "[b-k]{2}[0-9]{3}"))
+#IDs der Bücher ziehen
+#ACHTUNG: Bei file_a handelt es sich eigentlich nicht um einen String und daher den falschen Datentypen für die stringr-funktion. Ich wollte das lösen, indem ich ds XML-file in ein Textfile umwandeln wollte. Allerdings spuckt mir stringr dann nichts Gescheites aus. Aus dem Grund hab ich jetzt halt trotzdem file_a als Quelle genommen, weil R das ja coerced und entsprechend die Funktion trotzdem angewendet werden kann.
+
+list(bookId=helphelp)
+#Book ID-Liste mit Titel erstellen
+```
+
+*Anmerkung: Wenn die Aufgabe so zu verstehen ist, dass wir mit einer Funktion des xml2-packages eine Liste der IDs erstellen sollen, bin ich überfragt. Ich glaube, ich müsste irgendwie die Funktion xml_attr nutzen, weil die id ja das Atribut ist, aber wie genau, weiss ich nicht...*
+
+* What is the name of the author of the 4th book?
+
+*Antwort:Eva Corets.* 
+*Anmerkung auch hier: Wenn ich eine Funktion des xml2-packets nutzen soll, das mir direkt als Antwort "Eva Corets" liefert und das nicht einfach ablesen soll, dann weiss ich nicht, wie das geht.*
+
+### File B
+
+Use an appropriate package to load the **file_b** into R. 
+
+* What is the email of Mr. Bea?
+
+```{r,include=TRUE}
+library(jsonlite)
+#packet jsonlite laden
+
+file_b <-fromJSON("/Users/ginam/OneDrive/Dokumente/GitHub/fds-2020-exercise/data/ex2/file_b")
+#file b in R laden
+
+View(file_b)
+#file_b anschauen, um herauszufinden, was die E-Mail von Mr. Bea ist.
+
+```
+*Die E-Mail von Mr. Bea lautet: nbea2@imageshack.us*
+*Anmerkung: Wolltet ihr hier einfach, dass man manuell die E-Mail rauszieht oder quasi das automatisiert, also eine Funktion erstellt oder benutzt, die als Resultat die E-Mail von Mr. Bea liefert?*
+
+# Assignment 2: Extract date with Regular Expressions {.tabset .tabset-fade .tabset-pills}
+
+You have the URL to an article of the Guardian. Use regular expressions to extract the publication date of the linked article. Your procedure should be generally applicable to the articles of The Guardian and not only apply to this single link. Use the package __stringr__ and its function __str_extract__ or optionally __str_replace__ to solve this task. (Hint: Slashes and Backslashes must be escaped with two preceding backslashes; e.g. '\ \ /' or '\ \ \'. The package lubridate and its function as_date() are helpful when trying to transform text to dates.)
+
+*Anmerkung: Auch hier, bezieht sich die Aufgabe auf das Datum im string oder auf das Datum des Artikels, der unter der Adresse des strings embedded ist? Ich will mich wirklich nicht beschweren, aber die Aufgaben sind sehr vage formuliert und das macht es mega schwierig zu verstehen, was ihr genau wollt, das wir tun...*
+
+```{r,include=TRUE}
+url <- "https://www.theguardian.com/society/2018/oct/11/new-law-employers-reveal-race-pay-gap-figures"
+#Structure: https://www.theguardian.com/category/year/month/day/headlinetext
+
+result <- lubridate::as_date("2018-10-11")  # The result should look like this.
+
+mopptop <- str_extract(url, "[0-9]{4}[\\/a-z]+[0-9]+")
+#Regular expression erstellen, um Publikationsdatum aus String zu ziehen
+
+coffeismyfriend <- lubridate::as_date(mopptop)
+#In Datumsformat umwandeln
+
+coffeismyfriend
+#Datum ausgeben lassen
+```
+
+
+# Assignment 3: Translation
+
+Take the content of file_b used in the first assignment. Transform it into an XML-File format by hand. You can use 
+https://www.xmlvalidation.com to validate your attempts.
+
+```{r, include=TRUE}
+file_b_transformed <- read_xml("/Users/ginam/OneDrive/Dokumente/GitHub/fds-2020-exercise/data/ex2/file_b_transformed1")
+
+xml_contents(file_b_transformed)
+```
+*Ich habe ein neues File erstellt, das ich file_b_transformed genannt habe. Um zu beweisen, dass ich file_b von Hand in ein XML-File übertragen habe, lese ich das transformierte file hier ein und wende dann wieder den xml_contents Befehl an.*
+
+
+
