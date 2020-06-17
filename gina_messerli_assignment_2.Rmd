@@ -63,27 +63,34 @@ file_a <- read_xml("/Users/ginam/OneDrive/Dokumente/GitHub/fds-2020-exercise/dat
 xml_contents(file_a)
 #Inhalte der Nodes des Files A anzeigen.
 
-danceoff <- xml_text(file_a)
-#File in Text umwandeln.
+xml_name(file_a)
+#Namen der Root des Files anschauen
 
-library(stringr)
-#Stringr library aktivieren
+xml_name(xml_children(file_a))
+#Namen der Unterknoten des Files anschauen. Unterknoten "book" -> Hier will ich hin
 
-helphelp <- unlist(stringr::str_extract_all(string=file_a,
-                                pattern = "[b-k]{2}[0-9]{3}"))
-#IDs der Bücher ziehen
-#ACHTUNG: Bei file_a handelt es sich eigentlich nicht um einen String und daher den falschen Datentypen für die stringr-funktion. Ich wollte das lösen, indem ich ds XML-file in ein Textfile umwandeln wollte. Allerdings spuckt mir stringr dann nichts Gescheites aus. Aus dem Grund hab ich jetzt halt trotzdem file_a als Quelle genommen, weil R das ja coerced und entsprechend die Funktion trotzdem angewendet werden kann.
+danceoff <- xml_find_all(file_a, "//book")
+#Neues File erstellen, das nur die Buchinhalte enthält
 
-list(bookId=helphelp)
-#Book ID-Liste mit Titel erstellen
+xml_attrs(x=danceoff)
+#Liste der Attribute aus dem neu-erstellten File ziehen, um an die id-Tags der Bücher zu gelangen.
+
 ```
 
-*Anmerkung: Wenn die Aufgabe so zu verstehen ist, dass wir mit einer Funktion des xml2-packages eine Liste der IDs erstellen sollen, bin ich überfragt. Ich glaube, ich müsste irgendwie die Funktion xml_attr nutzen, weil die id ja das Atribut ist, aber wie genau, weiss ich nicht...*
-
 * What is the name of the author of the 4th book?
+```{r, inlcude=TRUe}
+xml_name(xml_children(danceoff))
+#Namen der Unterknoten des Files danceoff anschauen. Unterknoten "author" -> hier will ich hin.
+
+authors <- xml_find_all(danceoff, "//author")
+#File nur mit den Namne der Autor*innen erstellen.
+
+authors
+#Anzeigen lassen. Vierte Autorin ist Eva Corets.
+```
 
 *Antwort:Eva Corets.* 
-*Anmerkung auch hier: Wenn ich eine Funktion des xml2-packets nutzen soll, das mir direkt als Antwort "Eva Corets" liefert und das nicht einfach ablesen soll, dann weiss ich nicht, wie das geht.*
+
 
 ### File B
 
@@ -101,15 +108,14 @@ file_b <-fromJSON("/Users/ginam/OneDrive/Dokumente/GitHub/fds-2020-exercise/data
 View(file_b)
 #file_b anschauen, um herauszufinden, was die E-Mail von Mr. Bea ist.
 
+file_b[3,4]
+#Mr. Beas E-Mail rausgeben lassen.
 ```
 *Die E-Mail von Mr. Bea lautet: nbea2@imageshack.us*
-*Anmerkung: Wolltet ihr hier einfach, dass man manuell die E-Mail rauszieht oder quasi das automatisiert, also eine Funktion erstellt oder benutzt, die als Resultat die E-Mail von Mr. Bea liefert?*
 
 # Assignment 2: Extract date with Regular Expressions {.tabset .tabset-fade .tabset-pills}
 
 You have the URL to an article of the Guardian. Use regular expressions to extract the publication date of the linked article. Your procedure should be generally applicable to the articles of The Guardian and not only apply to this single link. Use the package __stringr__ and its function __str_extract__ or optionally __str_replace__ to solve this task. (Hint: Slashes and Backslashes must be escaped with two preceding backslashes; e.g. '\ \ /' or '\ \ \'. The package lubridate and its function as_date() are helpful when trying to transform text to dates.)
-
-*Anmerkung: Auch hier, bezieht sich die Aufgabe auf das Datum im string oder auf das Datum des Artikels, der unter der Adresse des strings embedded ist? Ich will mich wirklich nicht beschweren, aber die Aufgaben sind sehr vage formuliert und das macht es mega schwierig zu verstehen, was ihr genau wollt, das wir tun...*
 
 ```{r,include=TRUE}
 url <- "https://www.theguardian.com/society/2018/oct/11/new-law-employers-reveal-race-pay-gap-figures"
@@ -125,8 +131,20 @@ coffeismyfriend <- lubridate::as_date(mopptop)
 
 coffeismyfriend
 #Datum ausgeben lassen
-```
 
+url2 <- "https://www.theguardian.com/society/1998/dec/25/new-law-employers-reveal-race-pay-gap-figures"
+url3 <- "https://www.theguardian.com/society/2528/apr/05/new-law-employers-reveal-race-pay-gap-figures"
+
+mopptop2 <- str_extract(url2, "[0-9]{4}[\\/a-z]+[0-9]+")
+mopptop3 <- str_extract(url3, "[0-9]{4}[\\/a-z]+[0-9]+")
+
+teaismyfriend <- lubridate::as_date(mopptop2)
+waterismyfriend <- lubridate::as_date(mopptop3)
+
+teaismyfriend
+waterismyfriend
+#Nachkontrolle anhand exemplarischer anderer Daten: funktioniert die regular expression, die ich gewählt habe, auch für andere Daten? Scheint der Fall zu sein (ist natürlich nicht vollständig, aber gibt ein Indiz darauf, dass es das sein könnte)
+```
 
 # Assignment 3: Translation
 
